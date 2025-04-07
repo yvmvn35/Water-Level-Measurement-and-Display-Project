@@ -1,0 +1,99 @@
+Code:
+
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+//Ultrasonic sensor pin definitions
+const int triggerPin = 6;
+const int echoPin = 5;
+
+//Buzzer and LED pin definitions
+const int buzzerPin = 10;
+const int redLedPin = 11;
+const int yellowLedPin = 9;
+const int greenLedPin = 8;
+
+//Button pin definition
+const int buttonPin = 2;
+int buttonState = 0;
+
+//LCD screen address and dimensions
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+//Time and distance variables
+long duration;
+int distanceLevel;
+
+void setup() {
+  // Start serial communication
+  Serial.begin(9600);
+
+  //Set pin modes
+  pinMode(triggerPin, OUTPUT);
+  pinMode(echoPin, INPUT);
+  pinMode(buzzerPin, OUTPUT);
+  pinMode(redLedPin, OUTPUT);
+  pinMode(yellowLedPin, OUTPUT);
+  pinMode(greenLedPin, OUTPUT);
+  pinMode(buttonPin, INPUT_PULLUP); //Enable internal pull-up resistor for the button
+
+  //Initialize the LCD screen
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Distance Level:");
+}
+
+void loop() {
+  //Measure distance with the ultrasonic sensor
+  digitalWrite(triggerPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(triggerPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(triggerPin, LOW);
+  duration = pulseIn(echoPin, HIGH);
+  distanceLevel = duration * 0.034 / 2;
+
+  //Display the distance level on the LCD screen
+  lcd.setCursor(0, 1);
+  lcd.print("Level: ");
+  lcd.print(distanceLevel);
+  lcd.print(" cm  ");
+
+  //Control the LEDs and buzzer based on the distance level
+  if (distanceLevel <= 10) {
+    digitalWrite(buzzerPin, HIGH);
+    digitalWrite(redLedPin, HIGH);
+    digitalWrite(yellowLedPin, LOW);
+    digitalWrite(greenLedPin, LOW);
+  } else if (distanceLevel > 10 && distanceLevel <= 20) {
+    digitalWrite(buzzerPin, LOW);
+    digitalWrite(redLedPin, LOW);
+    digitalWrite(yellowLedPin, HIGH);
+    digitalWrite(greenLedPin, LOW);
+  } else {
+    digitalWrite(buzzerPin, LOW);
+    digitalWrite(redLedPin, LOW);
+    digitalWrite(yellowLedPin, LOW);
+    digitalWrite(greenLedPin, HIGH);
+  }
+
+  //Button control
+  buttonState = digitalRead(buttonPin);
+  if (buttonState == LOW) { //When the button is pressed
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Button pressed!");
+    delay(1000); // Wait for 1 second
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Distance Level:");
+  }
+
+  delay(500); // Small delay
+}
+
+
+
+
